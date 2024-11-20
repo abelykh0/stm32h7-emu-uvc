@@ -74,7 +74,7 @@ extern "C" void setup()
 
 	screen.SetAttribute(0x3F01);
 
-
+*/
 	FRESULT fr = mount();
 	if (fr == FR_OK)
 	{
@@ -113,8 +113,8 @@ extern "C" void setup()
 	// Initialize Spectrum emulator
 	zx_setup(&MainScreen);
 
-	//loadSnapshot((const TCHAR*)u"bubble-bobble.z80");
-
+	loadSnapshot((const TCHAR*)u"bubble-bobble.z80");
+/*
 	fr = mount();
 	if (fr == FR_OK)
 	{
@@ -128,7 +128,7 @@ extern "C" void setup()
 		}
 		unmount();
 	}
-
+*/
     for (uint16_t offset = 0; offset < 32 * 24; offset++)
     {
 		uint16_t colors = _spectrumScreen->Settings.Attributes[offset];
@@ -156,7 +156,6 @@ extern "C" void setup()
 			}
 		}
     }
-*/
 }
 
 extern "C" void loop()
@@ -188,9 +187,9 @@ extern "C" void USB_DEVICE_Init()
 	  }
 
 	  // defaults are 128, 64, 128 (320)
-	  HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS,    64);  // 48
+	  HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS,    48);  // 48
 	  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 0, 16);  // 16
-	  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 240); // 256
+	  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 265); // 256
 
 	  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO) != USBD_OK)
 	  {
