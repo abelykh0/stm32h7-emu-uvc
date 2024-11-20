@@ -87,33 +87,7 @@ int32_t zx_loop()
                 if ((color & 0x8080) != 0)
                 {
                 	_spectrumScreen->Settings.Attributes[i] = __builtin_bswap16(color);
-
-/*
-                	uint16_t offset = i;
-                	uint16_t colors = _spectrumScreen->Settings.Attributes[i];
-
-                	uint8_t charX = offset % 32;
-                	uint8_t charY = offset / 32;
-                	uint8_t backColor = colors >> 8;
-                	uint8_t foreColor = colors & 0xFF;
-                	for (uint8_t i = 0; i < 8; i++)
-                	{
-                    	uint8_t pixels = *_spectrumScreen->GetPixelPointer(charY + i, charX);
-                    	for (uint8_t j = 0; j < 8; j++)
-                    	{
-            				uint8_t color;
-            				if (pixels << j & 0x80)
-            				{
-            					color = foreColor;
-            				}
-            				else
-            				{
-            					color = backColor;
-            				}
-            				SetPixel(charX * 8 + j, charY * 8 + i, color);
-                    	}
-                	}
-                	*/
+                	_spectrumScreen->AttributeUpdated(i);
                 }
             }
         }
@@ -210,78 +184,14 @@ extern "C" void writebyte(uint16_t addr, uint8_t data)
     	uint16_t offset = addr - (uint16_t)0x5800;
     	uint16_t colors = _spectrumScreen->FromSpectrumColor(data);
     	_spectrumScreen->Settings.Attributes[offset] = colors;
-    	colors = 0x3F30;
-
-    	uint8_t charX = offset % 32;
-    	uint8_t charY = offset / 32;
-    	uint8_t backColor = colors & 0x3F;
-    	uint8_t foreColor = colors >> 8;
-    	for (uint8_t i = 0; i < 8; i++)
-    	{
-        	uint8_t pixels = *(_spectrumScreen->GetPixelPointer(charY * 8 + i, charX));
-        	for (uint8_t j = 0; j < 8; j++)
-        	{
-				uint8_t color;
-				if (pixels << j & 0x80)
-				{
-					color = foreColor;
-				}
-				else
-				{
-					color = backColor;
-				}
-				SetPixel(48 + charX * 8 + j, 8 + charY * 8 + i, color);
-        	}
-    	}
+    	_spectrumScreen->AttributeUpdated(offset);
     }
     else if (addr >= (uint16_t)0x4000)
     {
         // Screen pixels
     	uint8_t offset = addr - (uint16_t)0x4000;
     	_spectrumScreen->Settings.Pixels[offset] = data;
-
-    	uint8_t charX = offset % 32;
-    	uint8_t charY = offset / 32 / 8;
-    	uint16_t colors = _spectrumScreen->Settings.Attributes[charY * 32 + charX];
-    	colors = 0x3F30;
-    	uint8_t backColor = colors & 0x3F;
-    	uint8_t foreColor = colors >> 8;
-    	for (uint8_t i = 0; i < 8; i++)
-    	{
-        	uint8_t pixels = *(_spectrumScreen->GetPixelPointer(charY * 8 + i, charX));
-        	for (uint8_t j = 0; j < 8; j++)
-        	{
-				uint8_t color;
-				if ((pixels << j) & 0x80)
-				{
-					color = foreColor;
-				}
-				else
-				{
-					color = backColor;
-				}
-				SetPixel(48 + charX * 8 + j, 8 + charY * 8 + i, color);
-        	}
-    	}
-
-/*
-    	uint8_t charX = offset % 32;
-    	uint8_t charY = offset / 32;
-    	//uint8_t _spectrumScreen->GetPixelPointer(charX, charY);
-    	for (uint8_t i = 0; i < 8; i++)
-    	{
-    		uint8_t color;
-    		if (data << i & 1)
-    		{
-    			color = 0x3F;
-    		}
-    		else
-    		{
-    			color = 0x00;
-    		}
-    		SetPixel(charX * 8 + i, charY, color);
-    	}
-    	*/
+    	_spectrumScreen->PixelsUpdated(offset);
     }
 }
 

@@ -15,6 +15,59 @@ SpectrumScreen::SpectrumScreen(VideoSettings settings, uint16_t startLine, uint1
 {
 }
 
+void SpectrumScreen::AttributeUpdated(uint16_t offset)
+{
+	uint16_t colors = this->Settings.Attributes[offset];
+	uint8_t charX = offset % 32;
+	uint8_t charY = offset / 32;
+	uint8_t backColor = colors & 0x3F;
+	uint8_t foreColor = (colors >> 8) & 0x3F;
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		uint8_t pixels = *this->GetPixelPointer(charY * 8 + i, charX);
+		for (uint8_t j = 0; j < 8; j++)
+		{
+			uint8_t color;
+			if (pixels << j & 0x80)
+			{
+				color = foreColor;
+			}
+			else
+			{
+				color = backColor;
+			}
+			SetPixel(48 + charX * 8 + j, 8 + charY * 8 + i, color);
+		}
+	}
+}
+
+void SpectrumScreen::PixelsUpdated(uint16_t offset)
+{
+	uint8_t charX = offset % 32;
+	uint16_t line = offset / 32;
+	uint8_t charY = line / 8;
+	uint16_t colors = this->Settings.Attributes[charY * 32 + charX];
+	uint8_t backColor = colors & 0x3F;
+	uint8_t foreColor = colors >> 8;
+	uint8_t lineOffset = offset >> 8;
+	uint8_t pixels = *this->GetPixelPointer(line);
+
+	for (uint8_t j = 0; j < 8; j++)
+	{
+		uint8_t color;
+		if (pixels << j & 0x80)
+		{
+			color = foreColor;
+		}
+		else
+		{
+			color = backColor;
+		}
+
+		SetPixel(48 + charX * 8 + j, 8 + charY * 8 + lineOffset, color);
+	}
+}
+
 uint8_t* SpectrumScreen::GetPixelPointer(uint16_t line)
 {
 	// ZX Sinclair addressing

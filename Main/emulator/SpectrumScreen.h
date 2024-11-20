@@ -21,6 +21,9 @@ public:
 	void ShowScreenshot(const uint8_t* screenshot);
 	uint16_t FromSpectrumColor(uint8_t sinclairColor);
 	uint8_t ToSpectrumColor(uint16_t color);
+
+	void AttributeUpdated(uint16_t offset);
+	void PixelsUpdated(uint16_t offset);
 };
 
 }

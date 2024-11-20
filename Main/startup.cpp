@@ -113,7 +113,7 @@ extern "C" void setup()
 	// Initialize Spectrum emulator
 	zx_setup(&MainScreen);
 
-	loadSnapshot((const TCHAR*)u"bubble-bobble.z80");
+	//loadSnapshot((const TCHAR*)u"bubble-bobble.z80");
 /*
 	fr = mount();
 	if (fr == FR_OK)
@@ -128,34 +128,11 @@ extern "C" void setup()
 		}
 		unmount();
 	}
-*/
     for (uint16_t offset = 0; offset < 32 * 24; offset++)
     {
-		uint16_t colors = _spectrumScreen->Settings.Attributes[offset];
-		//colors = 0x3F03;
-
-		uint8_t charX = offset % 32;
-		uint8_t charY = offset / 32;
-		uint8_t backColor = colors & 0x3F;
-		uint8_t foreColor = (colors >> 8) & 0x3F;
-		for (uint8_t i = 0; i < 8; i++)
-		{
-			uint8_t pixels = *_spectrumScreen->GetPixelPointer(charY * 8 + i, charX);
-			for (uint8_t j = 0; j < 8; j++)
-			{
-				uint8_t color;
-				if (pixels << j & 0x80)
-				{
-					color = foreColor;
-				}
-				else
-				{
-					color = backColor;
-				}
-				SetPixel(48 + charX * 8 + j, 8 + charY * 8 + i, color);
-			}
-		}
+		_spectrumScreen->AttributeUpdated(offset);
     }
+*/
 }
 
 extern "C" void loop()
@@ -163,7 +140,7 @@ extern "C" void loop()
 	HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_3);
 	HAL_Delay(200);
 
-    //zx_loop();
+    zx_loop();
 	/*
 	char showTime[20];
 
