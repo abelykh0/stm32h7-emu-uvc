@@ -136,11 +136,11 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 			buffer = buffer2;
 
 			// 0x4000..0x5AFF
-			memcpy(buffer, _spectrumScreen->Settings.Pixels, _spectrumScreen->_pixelCount);
+			memcpy(buffer, _spectrumScreen->Settings->Pixels.array, _spectrumScreen->_pixelCount);
 			for (uint32_t i = 0; i < _spectrumScreen->_attributeCount; i++)
 			{
 				buffer[_spectrumScreen->_pixelCount + i] = _spectrumScreen->ToSpectrumColor(
-						_spectrumScreen->Settings.Attributes[i]);
+						_spectrumScreen->Settings->Attributes[i]);
 			}
 
 			// 0x5B00..0x7FFF
@@ -534,8 +534,7 @@ void ReadState(FileHeader* header)
 	_zxCpu.pc = header->PC;
 
 	uint8_t borderColor = (header->Flags1 & 0x0E) >> 1;
-	*_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(
-			borderColor) >> 8;
+	_spectrumScreen->Settings->BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
 }
 
 void SaveState(FileHeader* header)
@@ -567,7 +566,7 @@ void SaveState(FileHeader* header)
 	// Bit 0  : Bit 7 of the R-register
 	// Bit 1-3: Border color
 	header->Flags1 = (_zxCpu.r & 0x80) >> 7;
-	uint8_t border = _spectrumScreen->ToSpectrumColor(*_spectrumScreen->Settings.BorderColor);
+	uint8_t border = _spectrumScreen->ToSpectrumColor(_spectrumScreen->Settings->BorderColor);
 	header->Flags1 |= (border & 0x38) >> 2;
 
 	// Bit 0-1: Interrupt mode (0, 1 or 2)

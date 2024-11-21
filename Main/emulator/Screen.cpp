@@ -4,48 +4,39 @@
 namespace Display
 {
 
-Screen::Screen(VideoSettings settings)
+Screen::Screen(VideoSettings* settings)
 	//: Screen(settings, 0, 0)
 {
 }
 
-Screen::Screen(VideoSettings settings, uint16_t startLine, uint16_t height)
+Screen::Screen(VideoSettings* settings, uint16_t startLine, uint16_t height)
 {
 	this->Settings = settings;
-	this->_startLine = startLine;
 	this->_isCursorVisible = false;
-
-	this->_hResolutionNoBorder = this->Settings.TextColumns * 8;
-	//this->_hResolution = this->Settings.Timing->video_pixels / this->Settings.Scale;
-	this->_vResolution = height / this->Settings.Scale;
-
-	this->_hResolution = 320;
-	this->_horizontalBorder = (this->_hResolution - this->_hResolutionNoBorder) / 2;
-    this->_verticalBorder = (this->_vResolution - this->Settings.TextRows * 8) / 2;
-
-	this->_attributeCount = this->Settings.TextColumns * this->Settings.TextRows;
-	this->_pixelCount = this->_attributeCount * 8;
+	this->_pixelCount = 32 * 24 * 8;
+	this->_attributeCount = 32 * 24;
 }
 
 void Screen::Clear()
 {
-	memset(this->Settings.Pixels, 0, this->_pixelCount);
+	memset((uint8_t*)this->Settings->Pixels.array, 0, this->_pixelCount);
 	for (int i = 0; i < this->_attributeCount; i++)
 	{
-		this->Settings.Attributes[i] = this->_attribute;
+		this->Settings->Attributes[i] = this->_attribute;
 	}
-	*this->Settings.BorderColor = (uint8_t) this->_attribute;
+	this->Settings->BorderColor = (uint8_t)this->_attribute;
 }
 
 uint8_t* Screen::GetPixelPointer(uint16_t line)
 {
-    return &this->Settings.Pixels[line * this->Settings.TextColumns];
+	return this->Settings->GetPixelPointer(line, 0);
 }
 
 uint8_t* Screen::GetPixelPointer(uint16_t line, uint8_t character)
 {
-	return this->GetPixelPointer(line) + character;
+	return this->Settings->GetPixelPointer(line, character);
 }
+
 
 void Screen::SetFont(const uint8_t* font)
 {
@@ -64,14 +55,14 @@ void Screen::SetCursorPosition(uint8_t x, uint8_t y)
 		return;
 	}
 
-	if (x >= this->Settings.TextColumns)
+	if (x >= this->Settings->TextColumns)
 	{
-		x = this->Settings.TextColumns - 1;
+		x = this->Settings->TextColumns - 1;
 	}
 
-	if (y >= this->Settings.TextRows)
+	if (y >= this->Settings->TextRows)
 	{
-		y = this->Settings.TextRows - 1;
+		y = this->Settings->TextRows - 1;
 	}
 
     if (this->_isCursorVisible)
@@ -126,13 +117,13 @@ void Screen::PrintAt(uint8_t x, uint8_t y, const char* str)
 
 void Screen::PrintAlignRight(uint8_t y, const char *str)
 {
-    uint8_t leftX = this->Settings.TextColumns - strlen(str);
+    uint8_t leftX = this->Settings->TextColumns - strlen(str);
     this->PrintAt(leftX, y, str);
 }
 
 void Screen::PrintAlignCenter(uint8_t y, const char *str)
 {
-    uint8_t leftX = (this->Settings.TextColumns - strlen(str)) / 2;
+    uint8_t leftX = (this->Settings->TextColumns - strlen(str)) / 2;
     this->PrintAt(leftX, y, str);
 }
 
@@ -143,7 +134,7 @@ void Screen::PrintChar(char c, uint16_t color)
 	case '\0': //null
 		break;
 	case '\n': //line feed
-		if (this->_cursor_y < this->Settings.TextRows - 1)
+		if (this->_cursor_y < this->Settings->TextRows - 1)
 		{
 			this->SetCursorPosition(0, this->_cursor_y + 1);
 		}
@@ -250,20 +241,20 @@ void Screen::DrawChar(const uint8_t *f, uint16_t x, uint16_t y, uint8_t c)
 void Screen::PrintCharAt(uint8_t x, uint8_t y, unsigned char c, uint16_t color)
 {
 	this->DrawChar(this->_font, x * 8, y * 8, c);
-	this->Settings.Attributes[y * this->Settings.TextColumns + x] = color;
+	this->Settings->Attributes[y * this->Settings->TextColumns + x] = color;
 }
 
 void Screen::CursorNext()
 {
 	uint8_t x = this->_cursor_x;
 	uint8_t y = this->_cursor_y;
-	if (x < this->Settings.TextColumns - 1)
+	if (x < this->Settings->TextColumns - 1)
 	{
 		x++;
 	}
 	else
 	{
-		if (y < this->Settings.TextRows - 1)
+		if (y < this->Settings->TextRows - 1)
 		{
 			x = 0;
 			y++;
@@ -274,9 +265,9 @@ void Screen::CursorNext()
 
 void Screen::InvertColor()
 {
-    uint16_t originalColor = this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x];
+    uint16_t originalColor = this->Settings->Attributes[this->_cursor_y * this->Settings->TextColumns + this->_cursor_x];
     uint16_t newColor = __builtin_bswap16(originalColor);
-    this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x] = newColor;
+    this->Settings->Attributes[this->_cursor_y * this->Settings->TextColumns + this->_cursor_x] = newColor;
 }
 
 }

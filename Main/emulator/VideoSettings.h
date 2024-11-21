@@ -1,24 +1,22 @@
 #ifndef _VIDEOSETTINGS_H
 #define _VIDEOSETTINGS_H
 
-#include <stdint.h>
+#include "ClassProperties.h"
+#include "videoRam.h"
 
 namespace Display
 {
 
-class VideoSettings
+class VideoSettings : public VideoRam
 {
-  public:
-	uint8_t Scale;
+private:
 
+public:
 	// text resolution
-	uint8_t TextColumns;
-	uint8_t TextRows;
+	uint8_t TextColumns = 32;
+	uint8_t TextRows = 24;
 
-	// video memory
-	uint8_t* Pixels;
-	uint16_t* Attributes; // colors
-	uint8_t* BorderColor;
+	uint8_t BorderColor;
 };
 
 }

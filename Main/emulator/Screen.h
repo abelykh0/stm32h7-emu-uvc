@@ -18,34 +18,27 @@ private:
     void CursorNext();
     void InvertColor();
 
-	uint16_t _startLine;
-    uint16_t _horizontalBorder;
-    uint8_t _verticalBorder;
     bool _isCursorVisible;
 
 protected:
 	virtual uint8_t* GetPixelPointer(uint16_t line);
 	virtual uint8_t* GetPixelPointer(uint16_t line, uint8_t character);
 
-    uint16_t _hResolution;
-    uint16_t _hResolutionNoBorder;
-    uint16_t _vResolution;
-
     uint8_t* _font = (uint8_t*)font8x8;
     uint16_t _attribute = 0x3F10; // white on blue
 
 public:
-    uint8_t _cursor_x = 0;
-    uint8_t _cursor_y = 0;
     uint16_t _pixelCount;
     uint16_t _attributeCount;
+    uint8_t _cursor_x = 0;
+    uint8_t _cursor_y = 0;
     volatile uint32_t _frames = 0;
 
-    VideoSettings Settings;
-    Screen(VideoSettings settings);
-	Screen(VideoSettings settings, uint16_t startLine, uint16_t height);
+    VideoSettings* Settings;
+    Screen(VideoSettings* settings);
+	Screen(VideoSettings* settings, uint16_t startLine, uint16_t height);
 
-	void Clear();
+	virtual void Clear();
 	void SetFont(const uint8_t* font);
 	void SetAttribute(uint16_t attribute);
 	void SetCursorPosition(uint8_t x, uint8_t y);

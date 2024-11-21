@@ -6,7 +6,6 @@
 #include "z80main.h"
 #include "z80input.h"
 #include "ps2Keyboard.h"
-#include "canvas.h"
 
 //#define BEEPER
 #define CYCLES_PER_STEP 69888
@@ -38,7 +37,7 @@ extern "C"
 void zx_setup(SpectrumScreen* spectrumScreen)
 {
 	_spectrumScreen = spectrumScreen;
-	_attributeCount = spectrumScreen->Settings.TextColumns * spectrumScreen->Settings.TextRows;
+	_attributeCount = spectrumScreen->Settings->TextColumns * spectrumScreen->Settings->TextRows;
 
     _zxContext.readbyte = readbyte;
     _zxContext.readword = readword;
@@ -62,7 +61,7 @@ void zx_setup(SpectrumScreen* spectrumScreen)
 void zx_reset()
 {
     memset(indata, 0xFF, 128);
-    *_spectrumScreen->Settings.BorderColor = 0x15;
+    _spectrumScreen->Settings->BorderColor = 0x15;
     Z80Reset(&_zxCpu);
 }
 
@@ -83,11 +82,10 @@ int32_t zx_loop()
             frames = 0;
             for (int i = 0; i < _attributeCount; i++)
             {
-                uint16_t color = _spectrumScreen->Settings.Attributes[i];
+                uint16_t color = _spectrumScreen->Settings->Attributes[i];
                 if ((color & 0x8080) != 0)
                 {
-                	_spectrumScreen->Settings.Attributes[i] = __builtin_bswap16(color);
-                	_spectrumScreen->AttributeUpdated(i);
+                	_spectrumScreen->Settings->Attributes[i] = __builtin_bswap16(color);
                 }
             }
         }
@@ -146,12 +144,12 @@ extern "C" uint8_t readbyte(uint16_t addr)
     else if (addr >= (uint16_t)0x5800)
     {
         // Screen Attributes
-        res = _spectrumScreen->ToSpectrumColor(_spectrumScreen->Settings.Attributes[addr - (uint16_t)0x5800]);
+        res = _spectrumScreen->ToSpectrumColor(_spectrumScreen->Settings->Attributes[addr - (uint16_t)0x5800]);
     }
     else if (addr >= (uint16_t)0x4000)
     {
         // Screen pixels
-        res = _spectrumScreen->Settings.Pixels[addr - (uint16_t)0x4000];
+        res = _spectrumScreen->Settings->Pixels[addr - (uint16_t)0x4000];
     }
     else
     {
@@ -183,15 +181,13 @@ extern "C" void writebyte(uint16_t addr, uint8_t data)
         // Screen Attributes
     	uint16_t offset = addr - (uint16_t)0x5800;
     	uint16_t colors = _spectrumScreen->FromSpectrumColor(data);
-    	_spectrumScreen->Settings.Attributes[offset] = colors;
-    	_spectrumScreen->AttributeUpdated(offset);
+    	_spectrumScreen->Settings->Attributes[offset] = colors;
     }
     else if (addr >= (uint16_t)0x4000)
     {
         // Screen pixels
     	uint8_t offset = addr - (uint16_t)0x4000;
-    	_spectrumScreen->Settings.Pixels[offset] = data;
-    	_spectrumScreen->PixelsUpdated(offset);
+    	_spectrumScreen->Settings->Pixels[offset] = data;
     }
 }
 
@@ -260,7 +256,7 @@ extern "C" void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
         uint8_t borderColor = (data & 0x07);
     	if ((indata[0x20] & 0x07) != borderColor)
     	{
-            *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
+            _spectrumScreen->Settings->BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
     	}
 
 #ifdef BEEPER

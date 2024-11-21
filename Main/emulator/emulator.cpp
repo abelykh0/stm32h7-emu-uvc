@@ -19,9 +19,9 @@ uint8_t _buffer16K_2[0x4000];
 
 // Debug screen video RAM
 // DEBUG_COLUMNS x DEBUG_ROWS characters
-static uint8_t  _debugPixels[52 * 8 * DEBUG_ROWS]; // number of text columns must be divisible by 4
-static uint16_t _debugAttributes[52 * DEBUG_ROWS]; // number of text columns must be divisible by 4
-static uint8_t  _debugBorderColor;
+//static uint8_t  _debugPixels[52 * 8 * DEBUG_ROWS]; // number of text columns must be divisible by 4
+//static uint16_t _debugAttributes[52 * DEBUG_ROWS]; // number of text columns must be divisible by 4
+//static uint8_t  _debugBorderColor;
 
 // Spectrum video RAM + border color
 // 256x192 pixels (or 32x24 characters)
@@ -31,20 +31,17 @@ static SpectrumScreenData _spectrumScreenData;
 static SpectrumScreenData* _savedScreenData = (SpectrumScreenData*)&_buffer16K_2[0x4000 - sizeof(SpectrumScreenData)];
 
 // Debug band
-static VideoSettings _videoSettings {
-	2,  // Scale
-	DEBUG_COLUMNS, DEBUG_ROWS, _debugPixels, _debugAttributes,
-	&_debugBorderColor
-};
+//static VideoSettings _videoSettings {
+//	2,  // Scale
+//	DEBUG_COLUMNS, DEBUG_ROWS, _debugPixels, _debugAttributes,
+//	&_debugBorderColor
+//};
 static uint16_t _spectrumBandHeight = 320;
-Screen DebugScreen(_videoSettings, _spectrumBandHeight, DEBUG_BAND_HEIGHT);
+//Screen DebugScreen(_videoSettings, _spectrumBandHeight, DEBUG_BAND_HEIGHT);
 
 // Spectrum screen band
-static VideoSettings _spectrumVideoSettings {
-	2,  // Scale
-	32, 24, _spectrumScreenData.Pixels, _spectrumScreenData.Attributes, &_spectrumScreenData.BorderColor
-};
-SpectrumScreen MainScreen(_spectrumVideoSettings, 0, _spectrumBandHeight);
+static VideoSettings _spectrumVideoSettings;
+SpectrumScreen MainScreen(&_spectrumVideoSettings, 0, _spectrumBandHeight);
 
 static bool _showingKeyboard;
 static bool _settingDateTime;
@@ -58,22 +55,22 @@ void initializeVideo()
 
 void startVideo()
 {
-	DebugScreen.Clear();
+	//DebugScreen.Clear();
 	MainScreen.Clear();
 }
 
 void showErrorMessage(const char* errorMessage)
 {
-	DebugScreen.SetAttribute(0x0310); // red on blue
-	DebugScreen.PrintAlignCenter(2, errorMessage);
-	DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.SetAttribute(0x0310); // red on blue
+	//DebugScreen.PrintAlignCenter(2, errorMessage);
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
 }
 
 void showTitle(const char* title)
 {
-	DebugScreen.SetAttribute(0x3F00); // white on black
-	DebugScreen.PrintAlignCenter(0, title);
-	DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.SetAttribute(0x3F00); // white on black
+	//DebugScreen.PrintAlignCenter(0, title);
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
 }
 
 void showKeyboardSetup()
@@ -81,9 +78,9 @@ void showKeyboardSetup()
 	saveState();
 	_showingKeyboard = true;
 
-	DebugScreen.SetAttribute(0x3F10); // white on blue
-	DebugScreen.Clear();
-	DebugScreen.PrintAlignCenter(2, "Press any key to return");
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.Clear();
+	//DebugScreen.PrintAlignCenter(2, "Press any key to return");
 
 	//MainScreen.ShowScreenshot(spectrumKeyboard);
 	_spectrumScreenData.BorderColor = 0; // Black
@@ -121,19 +118,20 @@ void toggleHelp()
 
 void clearHelp()
 {
-	DebugScreen.HideCursor();
-	DebugScreen.SetAttribute(0x3F10); // white on blue
-	DebugScreen.Clear();
+	//DebugScreen.HideCursor();
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.Clear();
 
 	_helpShown = false;
 }
 
 void showHelp()
 {
-	DebugScreen.HideCursor();
-	DebugScreen.SetAttribute(0x3F10); // white on blue
-	DebugScreen.Clear();
+	//DebugScreen.HideCursor();
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.Clear();
 
+	/*
 #ifdef BOARD2
 	DebugScreen.PrintAt(0, 0, "F1  - show / hide help");
 	DebugScreen.PrintAt(0, 1, "F3  - load snapshot from flash");
@@ -149,7 +147,7 @@ void showHelp()
 	DebugScreen.PrintAt(0, 5, "F10 - show keyboard layout");
 	DebugScreen.PrintAt(0, 6, "F12 - show registers");
 #endif
-
+*/
 	_helpShown = true;
 }
 
@@ -169,8 +167,8 @@ void setDateTimeSetup()
 {
 	_settingDateTime = true;
 
-	DebugScreen.SetAttribute(0x3F10); // white on blue
-	DebugScreen.Clear();
+	//DebugScreen.SetAttribute(0x3F10); // white on blue
+	//DebugScreen.Clear();
 	showTitle("Set Date and Time. ENTER, ESC, BS");
 
 	RTC_TimeTypeDef time;
@@ -181,13 +179,13 @@ void setDateTimeSetup()
 	sprintf(formattedDateTime, "%04d-%02d-%02d %02d:%02d:%02d",
 			date.Year + 2000, date.Month, date.Date,
 			time.Hours, time.Minutes, time.Seconds);
-	DebugScreen.PrintAlignCenter(2, formattedDateTime);
+	//DebugScreen.PrintAlignCenter(2, formattedDateTime);
 
 	_frames = DebugScreen._frames + 5;
 
-	DebugScreen.PrintAt(0, 4, "Enter new date and time (yyyy-mm-dd hh:mm:ss):");
-	DebugScreen.SetCursorPosition(0, 5);
-	DebugScreen.ShowCursor();
+	//DebugScreen.PrintAt(0, 4, "Enter new date and time (yyyy-mm-dd hh:mm:ss):");
+	//DebugScreen.SetCursorPosition(0, 5);
+	//DebugScreen.ShowCursor();
 	memset(_newDateTime, 0, 20);
 }
 
@@ -197,7 +195,7 @@ bool setDateTimeLoop()
 	{
 		return false;
 	}
-
+/*
 	RTC_TimeTypeDef time;
 	RTC_DateTypeDef date;
 	uint8_t x = DebugScreen._cursor_x;
@@ -289,7 +287,7 @@ bool setDateTimeLoop()
 		}
 		break;
 	}
-
+*/
 	return true;
 }
 
@@ -310,6 +308,7 @@ void restoreState(bool restoreScreen)
 
 void showRegisters()
 {
+	/*
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
 	showTitle("Registers. ESC - clear");
@@ -332,4 +331,5 @@ void showRegisters()
         _zxCpu.registers.word[Z80_IY], _zxCpu.registers.word[Z80_HL],
         _zxCpu.alternates[Z80_HL]);
     DebugScreen.PrintAlignCenter(5, buf);
+    */
 }

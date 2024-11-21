@@ -5,93 +5,22 @@
 namespace Display
 {
 
-SpectrumScreen::SpectrumScreen(VideoSettings settings)
+SpectrumScreen::SpectrumScreen(VideoSettings* settings)
 	: Screen(settings)
 {
 }
 
-SpectrumScreen::SpectrumScreen(VideoSettings settings, uint16_t startLine, uint16_t height)
+SpectrumScreen::SpectrumScreen(VideoSettings* settings, uint16_t startLine, uint16_t height)
 : Screen(settings, startLine, height)
 {
 }
 
-void SpectrumScreen::AttributeUpdated(uint16_t offset)
-{
-	uint16_t colors = this->Settings.Attributes[offset];
-	uint8_t charX = offset % 32;
-	uint8_t charY = offset / 32;
-	uint8_t backColor = colors & 0x3F;
-	uint8_t foreColor = (colors >> 8) & 0x3F;
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		uint8_t pixels = *this->GetPixelPointer(charY * 8 + i, charX);
-		for (uint8_t j = 0; j < 8; j++)
-		{
-			uint8_t color;
-			if (pixels << j & 0x80)
-			{
-				color = foreColor;
-			}
-			else
-			{
-				color = backColor;
-			}
-			SetPixel(48 + charX * 8 + j, 8 + charY * 8 + i, color);
-		}
-	}
-}
-
-void SpectrumScreen::PixelsUpdated(uint16_t offset)
-{
-	uint8_t charX = offset % 32;
-	uint16_t line = offset / 32;
-	uint8_t charY = line / 8;
-	uint16_t colors = this->Settings.Attributes[charY * 32 + charX];
-	uint8_t backColor = colors & 0x3F;
-	uint8_t foreColor = colors >> 8;
-	uint8_t lineOffset = offset >> 8;
-	uint8_t pixels = *this->GetPixelPointer(line);
-
-	for (uint8_t j = 0; j < 8; j++)
-	{
-		uint8_t color;
-		if (pixels << j & 0x80)
-		{
-			color = foreColor;
-		}
-		else
-		{
-			color = backColor;
-		}
-
-		SetPixel(48 + charX * 8 + j, 8 + charY * 8 + lineOffset, color);
-	}
-}
-
-uint8_t* SpectrumScreen::GetPixelPointer(uint16_t line)
-{
-	// ZX Sinclair addressing
-	// 00-00-00-Y7-Y6-Y2-Y1-Y0 Y5-Y4-Y3-x4-x3-x2-x1-x0
-	//          12 11 10  9  8  7  6  5  4  3  2  1  0
-
-	uint32_t y012 = ((line & 0B00000111) << 8);
-	uint32_t y345 = ((line & 0B00111000) << 2);
-	uint32_t y67 = ((line & 0B11000000) << 5);
-	return &this->Settings.Pixels[y012 | y345 | y67];
-}
-
-uint8_t* SpectrumScreen::GetPixelPointer(uint16_t line, uint8_t character)
-{
-	character &= 0B00011111;
-	return this->GetPixelPointer(line) + character;
-}
-
 void SpectrumScreen::ShowScreenshot(const uint8_t* screenshot)
 {
-	memcpy(this->Settings.Pixels, screenshot, this->_pixelCount);
+	memcpy(this->Settings->Pixels.array, screenshot, this->_pixelCount);
 	for (uint32_t i = 0; i < this->_attributeCount; i++)
 	{
-		this->Settings.Attributes[i] = this->FromSpectrumColor(
+		this->Settings->Attributes[i] = this->FromSpectrumColor(
 				screenshot[this->_pixelCount + i]);
 	}
 }
@@ -105,20 +34,20 @@ uint16_t SpectrumScreen::FromSpectrumColor(uint8_t sinclairColor)
 
 	bool bright = ((sinclairColor & 0B01000000) != 0);
 
-	uint16_t ink = ((sinclairColor & 0B00000100) << 8); // InkG
-	ink |= ((sinclairColor & 0B00000010) << 7);         // InkR
-	ink |= ((sinclairColor & 0B00000001) << 12);        // InkB
+	uint16_t ink = ((sinclairColor & 0B00000100) << 9); // InkG
+	ink |= ((sinclairColor & 0B00000010) << 8);         // InkR
+	ink |= ((sinclairColor & 0B00000001) << 13);        // InkB
 	if (bright)
 	{
-		ink |= (ink << 1);
+		ink |= (ink >> 1);
 	}
 
-	uint16_t paper = ((sinclairColor & 0B00100000) >> 3); // PaperG
-	paper |= ((sinclairColor & 0B00010000) >> 4);         // PaperR
-	paper |= ((sinclairColor & 0B00001000) << 1);         // PaperB
+	uint16_t paper = ((sinclairColor & 0B00100000) >> 2); // PaperG
+	paper |= ((sinclairColor & 0B00010000) >> 3);         // PaperR
+	paper |= ((sinclairColor & 0B00001000) << 2);         // PaperB
 	if (bright)
 	{
-		paper |= (paper << 1);
+		paper |= (paper >> 1);
 	}
 
 	uint16_t result = ink | paper;
@@ -165,16 +94,26 @@ uint8_t SpectrumScreen::ToSpectrumColor(uint16_t color)
 		result |= 0B10000000;
 	}
 
-	result |= ((color & 0B00010000) >> 1); // PaperB
-	result |= ((color & 0B00000001) << 4); // PaperR
-	result |= ((color & 0B00000100) << 3); // PaperG
+	result |= ((color & 0B00100000) >> 2); // PaperB
+	result |= ((color & 0B00000010) << 3); // PaperR
+	result |= ((color & 0B00001000) << 2); // PaperG
 
 	color >>= 8;
-	result |= ((color & 0B00010000) >> 4); // InkB
-	result |= ((color & 0B00000001) << 1); // InkR
-	result |= (color & 0B00000100);        // InkG
+	result |= ((color & 0B00100000) >> 5); // InkB
+	result |= ((color & 0B00000010)     ); // InkR
+	result |= ((color & 0B00001000) >> 1); // InkG
 
 	return result;
+}
+
+void SpectrumScreen::Clear()
+{
+	memset(this->Settings->Pixels.array, 0, this->_pixelCount);
+	for (int i = 0; i < this->_attributeCount; i++)
+	{
+		this->Settings->Attributes[i] = this->_attribute;
+	}
+	//*this->Settings->BorderColor = (uint8_t) this->_attribute;
 }
 
 }

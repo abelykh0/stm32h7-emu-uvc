@@ -19,7 +19,7 @@ extern JPEG_HandleTypeDef hjpeg;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
-extern "C" void USB_DEVICE_Init(void);
+extern "C" void USB_DEVICE_Init();
 
 //using namespace Display2;
 //static Screen2 screen;
@@ -114,7 +114,8 @@ extern "C" void setup()
 	zx_setup(&MainScreen);
 
 	//loadSnapshot((const TCHAR*)u"bubble-bobble.z80");
-/*
+
+
 	fr = mount();
 	if (fr == FR_OK)
 	{
@@ -128,6 +129,17 @@ extern "C" void setup()
 		}
 		unmount();
 	}
+
+    for (uint16_t offset = 0; offset < 32 * 24 * 8; offset++)
+    {
+		//_spectrumScreen->Settings.Pixels[offset] =
+		uint8_t pixels = _spectrumScreen->Settings->Pixels[offset];
+		if (pixels != 0)
+		{
+			_spectrumScreen->Settings->Pixels[offset] = pixels;
+		}
+    }
+/*
     for (uint16_t offset = 0; offset < 32 * 24; offset++)
     {
 		_spectrumScreen->AttributeUpdated(offset);
@@ -140,7 +152,7 @@ extern "C" void loop()
 	HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_3);
 	HAL_Delay(200);
 
-    zx_loop();
+    //zx_loop();
 	/*
 	char showTime[20];
 
